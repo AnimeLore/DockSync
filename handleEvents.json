@@ -1,0 +1,23 @@
+{
+	"sections": [
+		{
+			"title": "Настройки",
+			"items": [
+				{
+					"id": "websocket",
+					"name": "Настроки WebSocket",
+					"description": "",
+					"type": "text",
+					"buttons": [
+						{
+							"id": "port",
+							"name": "Порт",
+							"text": "8765",
+							"defaultParameter": "8765"
+						}
+					]
+				}
+			]
+		}
+	]
+}
