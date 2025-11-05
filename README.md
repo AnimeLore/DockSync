@@ -18,8 +18,8 @@ DockSync - это аддон для PulseSync, разработанный спе
 Шаблон любого запроса плагина:
 ```json
 {
-"request": "requestId",
-"message": "requestMessage"
+  "request": "requestId",
+  "message": "requestMessage"
 }
 ```
 
@@ -30,7 +30,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ### Пример базового запроса
 ```json
 {
-"request": "device"
+  "request": "device"
 }
 ```
 Данный запрос используется как тестовый. Если WebSocket верно настроен - в DevTools консоли Яндекс.Музыки появится сообщение `Плагин успешно подключился к доку!`.
@@ -42,8 +42,8 @@ DockSync - это аддон для PulseSync, разработанный спе
 ##### `volume` - используется для управления громкостью плеера
 ```json
 {
-"request": "volume",
-"message": 0.2,
+  "request": "volume",
+  "message": 0.2,
 "how": 1
 }
 ```
@@ -56,18 +56,18 @@ DockSync - это аддон для PulseSync, разработанный спе
 ##### `track` - используется для управления треком
 ```json
 {
-"request": "track",
-"message": 1,
+  "request": "track",
+  "message": 1,
 }
 ```
-`message` - указывает в каком направлении нужно "дввинуть" плеер (следующий трек/предыдущий трек),  может равняться `-1` или `1`
+`message` - указывает в каком направлении нужно "двинуть" плеер (следующий трек/предыдущий трек),  может равняться `-1` или `1`
 
 &nbsp;
 
 ##### `repeatInteraction` - используется для управления функцией повтора плеера
 ```json
 {
-"request": "repeatInteraction",
+  "request": "repeatInteraction",
 }
 ```
 Данный функционал эмулирует нажатие на кнопку в плеера и не поддерживает установку определенного значения :(
@@ -77,7 +77,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ##### `shuffleInteraction` - используется для управления функцией перемешки плеера
 ```json
 {
-"request": "shuffleInteraction",
+  "request": "shuffleInteraction",
 }
 ```
 Данный функционал эмулирует нажатие на кнопку в плеера и не поддерживает установку определенного значения :(
@@ -87,7 +87,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ##### `muteInteraction` - используется для управления функцией выключения звука плеера
 ```json
 {
-"request": "muteInteraction",
+  "request": "muteInteraction",
 }
 ```
 Данный функционал эмулирует нажатие на кнопку в плеера и не поддерживает установку определенного значения :(
@@ -98,7 +98,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ##### `playerInteraction` - используется для управления паузой/воспроизведением треков в плеере
 ```json
 {
-"request": "playerInteraction",
+  "request": "playerInteraction",
 }
 ```
 Данный функционал эмулирует нажатие на кнопку в плеера и не поддерживает установку определенного значения :(
@@ -109,7 +109,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ##### `likeInteraction` - используется для добавления/удаления трека из избранного
 ```json
 {
-"request": "likeInteraction",
+  "request": "likeInteraction",
 }
 ```
 Данный функционал эмулирует нажатие на кнопку в плеера и не поддерживает установку определенного значения :(
@@ -119,7 +119,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ##### `dislikeInteraction` - используется для добавления/удаления трека из игнорируемых
 ```json
 {
-"request": "dislikeInteraction",
+  "request": "dislikeInteraction",
 }
 ```
 Данный функционал эмулирует нажатие на кнопку в плеера и не поддерживает установку определенного значения :(
@@ -137,14 +137,14 @@ DockSync - это аддон для PulseSync, разработанный спе
 Отправляемый запрос из плагина:
 ```json
 {
-"request": "repeatState",
+  "request": "repeatState",
 }
 ```
 Ответ от аддона:
 ```json
 {
-"request": "repeatState",
-"message": 1
+  "request": "repeatState",
+  "message": 1
 }
 ```
 
@@ -156,14 +156,14 @@ DockSync - это аддон для PulseSync, разработанный спе
 Отправляемый запрос из плагина:
 ```json
 {
-"request": "shuffleState",
+  "request": "shuffleState",
 }
 ```
 Ответ от аддона:
 ```json
 {
-"request": "shuffleState",
-"message": 1
+  "request": "shuffleState",
+  "message": 1
 }
 ```
 
@@ -175,14 +175,14 @@ DockSync - это аддон для PulseSync, разработанный спе
 Отправляемый запрос из плагина:
 ```json
 {
-"request": "likeState",
+  "request": "likeState",
 }
 ```
 Ответ от аддона:
 ```json
 {
-"request": "likeState",
-"message": 1
+  "request": "likeState",
+  "message": 1
 }
 ```
 
@@ -194,14 +194,14 @@ DockSync - это аддон для PulseSync, разработанный спе
 Отправляемый запрос из плагина:
 ```json
 {
-"request": "playingState",
+  "request": "playingState",
 }
 ```
 Ответ от аддона:
 ```json
 {
-"request": "playingState",
-"message": 1
+  "request": "playingState",
+  "message": 1
 }
 ```
 
