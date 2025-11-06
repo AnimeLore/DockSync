@@ -144,7 +144,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ```json
 {
   "request": "repeatState",
-  "message": 1
+  "response": 1
 }
 ```
 
@@ -163,7 +163,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ```json
 {
   "request": "shuffleState",
-  "message": 1
+  "response": 1
 }
 ```
 
@@ -182,7 +182,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ```json
 {
   "request": "likeState",
-  "message": 1
+  "response": 1
 }
 ```
 
@@ -201,7 +201,7 @@ DockSync - это аддон для PulseSync, разработанный спе
 ```json
 {
   "request": "playingState",
-  "message": 1
+  "response": 1
 }
 ```
 
