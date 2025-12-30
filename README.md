@@ -205,6 +205,42 @@ DockSync - это аддон для PulseSync, разработанный спе
 }
 ```
 
+&nbsp;
+##### `vibeState` - возвращает текущее состояние плеера относительно "Моей волны", имеет значения:
+- 0 - Волна выключена
+- 1 - Волна включена
+
+Отправляемый запрос из плагина:
+```json
+{
+  "request": "vibeState",
+}
+```
+Ответ от аддона:
+```json
+{
+  "request": "vibeState",
+  "response": 1
+}
+```
+
+&nbsp;
+##### `coverImage` - возвращает URL (не https, а http) обложки трека, отдает в виде String.
+
+Отправляемый запрос из плагина:
+```json
+{
+  "request": "coverImage",
+}
+```
+Ответ от аддона:
+```json
+{
+  "request": "coverImage",
+  "response": "http://example.com"
+}
+```
+
 ## Благодарности
 - Спасибо разработчикам PulseSync за удобный интерфейс и обработку плагинов
 - Спасибо [WolfySoCute](https://github.com/WolfySoCute) за вдохновение и примеры работы WebSocket
