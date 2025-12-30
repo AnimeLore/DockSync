@@ -45,6 +45,36 @@ function transformJSON(data) {
 }
 
 let socket;
+function globalVibeInteraction() {
+	try {
+		let tm_t = 100;
+		if(!document.querySelector('.cpeagBA1_PblpJn8Xgtv[data-test-id="MY_VIBE_PLAY_BUTTON"]') && !document.querySelector('.cpeagBA1_PblpJn8Xgtv[data-test-id="MY_VIBE_PAUSE_BUTTON"]')) {
+			document.querySelector('a.buOTZq_TKQOVyjMLrXvB:has(span[title="Главная"])').click();
+			tm_t = 2000;
+		}
+		setTimeout(() => {
+			if(document.querySelector('.cpeagBA1_PblpJn8Xgtv[data-test-id="MY_VIBE_PLAY_BUTTON"]')) {
+				document.querySelector('.cpeagBA1_PblpJn8Xgtv[data-test-id="MY_VIBE_PLAY_BUTTON"]').click()
+			} else {
+				document.querySelector('.cpeagBA1_PblpJn8Xgtv[data-test-id="MY_VIBE_PAUSE_BUTTON"]').click()
+			}
+			}, tm_t);
+	} catch(e) {
+		return false
+	}
+	return true;
+}
+
+function trackVibeInteraction() {
+	try {
+		document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .cpeagBA1_PblpJn8Xgtv[data-test-id="PLAYERBAR_DESKTOP_CONTEXT_MENU_BUTTON"]').click()
+		setTimeout( () => {document.querySelector('.cpeagBA1_PblpJn8Xgtv[data-test-id="CONTEXT_MENU_VIBE_BUTTON"]').click()}, 1000)
+	} catch(err) {
+		console.log(err);
+			return false;
+	}
+	return true;
+}
 function muteInteraction() {
 	try {
 		document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .cpeagBA1_PblpJn8Xgtv[data-test-id="CHANGE_VOLUME_BUTTON"]').click()
@@ -163,7 +193,13 @@ function repeatInteraction() {
 	}
 	return true;
 }
-
+function isPlayerVibeStatus() {
+		if(window.sonataState.queueState.currentEntity.value.entity.entityData.type == "vibeTrack") {
+			return 1
+		} else {
+			return 0
+		}
+}
 function isPlayerShuffledStatus() {
 	if(document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="SHUFFLE_BUTTON_ON"]')) {
 		return 1;
@@ -182,6 +218,9 @@ function isPlayerRepeatedStatus() {
 	}
 }
 
+function getCoverImageSrc() {
+	return (document.querySelector(".PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN img[data-test-id=ENTITY_COVER_IMAGE]").src).replace("https", "http");
+}
 function getCurrentVolumeLevel() {
 	return Math.round(window.sonataState.playerState.exponentVolume.value*100)/100;
 }
@@ -207,6 +246,12 @@ function handleSocketCommand(message, data, socket) {
 		case "device":
 			console.log('Плагин успешно подключился к доку!');
 			break;
+		case "coverImage":
+			socket.send(JSON.stringify({response: getCoverImageSrc(), request: "coverImage"}));
+		break;
+		case "vibeState":
+			socket.send(JSON.stringify({response: isPlayerVibeStatus(), request: "vibeState"}));
+		break;
 		case "repeatState":
 			socket.send(JSON.stringify({response: isPlayerRepeatedStatus(), request: "repeatState"}));
 		break;
@@ -231,6 +276,14 @@ function handleSocketCommand(message, data, socket) {
 		case "playerInteraction":
 			console.log('playerInteraction запрошена устройством;');
 			playingInteraction();
+			break;
+		case "trackVibeInteraction":
+			console.log('trackVibeInteraction запрошена устройством;');
+			trackVibeInteraction();
+			break;
+		case "globalVibeInteraction":
+			console.log('globalVibeInteraction запрошена устройством;');
+			globalVibeInteraction();
 			break;
 		case "muteInteraction":
 			console.log('muteInteraction запрошена устройством;');
