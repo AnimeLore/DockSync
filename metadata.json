@@ -1,18 +1,23 @@
 {
-  "name": "DockSync",
-  "image": "App-logo.png",
-  "banner": "banner.png",
-  "libraryLogo": "App-logo.png",
-  "author": "AnimeLore",
-  "description": "Useful addon for bonding your StreamDock and Yandex Music together",
-  "version": "0.0.1",
-  "css": "",
-  "script": "script.js",
-  "type": "script",
-  "tags": [
-    "PulseSync",
-    "streamdeck",
-    "js-control"
-  ],
-  "dependencies": []
+    "name": "DockSync",
+    "image": "App-logo.png",
+    "banner": "banner.png",
+    "libraryLogo": "App-logo.png",
+    "author": "AnimeLore",
+    "description": "Полезный аддон для связывания вашего StreamDock и Яндекс музыки",
+    "version": "0.0.3",
+    "css": "style.css",
+    "script": "script.js",
+    "type": "script",
+    "tags": [
+        "PulseSync",
+        "streamdeck",
+        "js-control"
+    ],
+    "dependencies": [],
+    "allowedUrls": [],
+    "supportedVersions": [],
+    "installSource": "local",
+    "id": "1435cad703987800b2eaf7d9",
+    "storeAddonId": "9fc79c59-fac2-49d7-88ee-38498ef4d70a"
 }

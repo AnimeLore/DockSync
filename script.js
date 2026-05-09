@@ -114,7 +114,7 @@ function changeVolumeByStep(step, how) {
 			if(normalVolume > 1) {
 				normalVolume = 1
 			}
-			window.sonataState.playerState.volume.value = encodeNormalVolumeToAbstract(normalVolume);
+			pulsesyncApi.setVolume(normalVolume);
 			return true;
 			
 		break;
@@ -125,7 +125,7 @@ function changeVolumeByStep(step, how) {
 			if(normalVolume < 0) {
 				normalVolume = 0
 			}
-			window.sonataState.playerState.volume.value = encodeNormalVolumeToAbstract(normalVolume);
+			pulsesyncApi.setVolume(normalVolume);
 			return true;
 		break;
 		default: 
@@ -245,6 +245,8 @@ function handleSocketCommand(message, data, socket) {
 	switch(message) {
 		case "device":
 			console.log('Плагин успешно подключился к доку!');
+			let element = document.getElementById("docksync_status");
+			element.className += " active";
 			break;
 		case "coverImage":
 			socket.send(JSON.stringify({response: getCoverImageSrc(), request: "coverImage"}));
@@ -316,8 +318,14 @@ function handleSocketCommand(message, data, socket) {
 			break
 	}
 }
-	
-
+const addIcon = setInterval(async () => {
+	let getTitleBar = document.getElementsByClassName("TitleBar_root__QjdOZ");
+	if (getTitleBar.length >= 1 && !(document.getElementById("docksync_status"))) {
+		getTitleBar[0].insertAdjacentHTML("afterbegin", "<div id='docksync_status'></div>");
+	} else if (document.getElementById("docksync_status")) {
+		clearInterval(addIcon);
+	}
+}, 1000);
 setInterval(async () => {
 	let setting = await getSettings('DockSync');
 	console.log(setting);
