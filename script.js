@@ -1,50 +1,106 @@
-async function getSettings(name) {
-    try {
-        const response = await fetch(`http://localhost:2007/get_handle?name=${name}`);
-        if (!response.ok) throw new Error(`Ошибка сети: ${response.status}`);
-  
-        const { data } = await response.json();
-        if (!data?.sections) {
-            console.warn("Структура данных не соответствует ожидаемой");
-            return null;
-        }
+const ADDON_NAME = "DockSync";
 
-        return transformJSON(data);
-    } catch (error) {
-        console.error(error);
-        return null;
-    }
-}
+const settingsStore = window.pulsesyncApi?.getSettings?.(ADDON_NAME);
+let currentSettings = settingsStore?.getCurrent?.() ?? {};
 
-// "Трансформирование" полученных настроек для более удобного использования
-function transformJSON(data) {
-    const result = {};
-
-    try {
-        data.sections.forEach(section => {
-            section.items.forEach(item => {
-                if (item.type === "text" && item.buttons) {
-                    result[item.id] = {};
-                    item.buttons.forEach(button => {
-                        result[item.id][button.id] = {
-                            value: button.text,
-                            default: button.defaultParameter
-                        };
-                    });
-                } else {
-                    result[item.id] = {
-                        value: item.bool || item.input || item.selected || item.value || item.filePath,
-                        default: item.defaultParameter
-                    };
-                }
-            });
-        });
-    } finally {
-        return result;
-    }
+function getWebSocketPort() {
+    return currentSettings?.websocket?.port?.value ?? currentSettings?.websocket?.port ?? "";
 }
 
 let socket;
+let reconnectTimer = null;
+let reconnectDelay = 1000;
+let currentWebSocketPort = null;
+
+const RECONNECT_MAX_DELAY = 30000;
+
+function closeSocket() {
+    if (
+        socket &&
+        socket.readyState !== WebSocket.CLOSED &&
+        socket.readyState !== WebSocket.CLOSING
+    ) {
+        socket.close();
+    }
+}
+
+function connectSocket() {
+    if (
+        socket &&
+        (
+            socket.readyState === WebSocket.OPEN ||
+            socket.readyState === WebSocket.CONNECTING
+        )
+    ) {
+        return;
+    }
+
+    const port = String(getWebSocketPort());
+
+    if (!port) {
+        console.error("Не найден websocket.port в настройках DockSync");
+        scheduleReconnect();
+        return;
+    }
+
+    currentWebSocketPort = port;
+    socket = new WebSocket(`ws://localhost:${port}`);
+
+    socket.addEventListener("open", () => {
+        console.log("Подключено к серверу");
+
+        reconnectDelay = 1000;
+
+        const activeIcon = setInterval(async () => {
+			let getIcon = document.getElementById("docksync_status");
+			if (getIcon.className == "") {
+				getIcon.className = "active";
+			} else  {
+				clearInterval(activeIcon);
+			}
+		}, 1000);
+    });
+
+    socket.addEventListener("message", (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            handleSocketCommand(message.request, message, socket);
+        } catch (error) {
+            console.error("Ошибка обработки сообщения WebSocket:", error);
+        }
+    });
+
+    socket.addEventListener("error", (error) => {
+        console.error("Ошибка WebSocket:", error);
+        closeSocket();
+    });
+
+    socket.addEventListener("close", () => {
+        console.warn("WebSocket отключён");
+
+        socket = null;
+
+        const element = document.getElementById("docksync_status");
+        element.classList.remove("active");
+
+        scheduleReconnect();
+    });
+}
+function scheduleReconnect() {
+    if (reconnectTimer) {
+        return;
+    }
+
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        connectSocket();
+    }, reconnectDelay);
+
+    reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_DELAY);
+}
+
+
+// Функции самого плагина
 function globalVibeInteraction() {
 	try {
 		let tm_t = 100;
@@ -135,20 +191,12 @@ function changeVolumeByStep(step, how) {
 }
 
 function moveBackward() {
-	try {
-		document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="PREVIOUS_TRACK_BUTTON"]').click()
-	} catch (e) {
-		return false;
-	}
+	window.pulsesyncApi.previous();
 	return true;
 }
 
 function moveForward() {
-	try {
-		document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="NEXT_TRACK_BUTTON"]').click()
-	} catch (e) {
-		return false;
-	}
+	window.pulsesyncApi.next();
 	return true;
 }
 
@@ -178,76 +226,78 @@ function shuffleInteraction() {
 	return true;
 }
 function repeatInteraction() {
-	try {
-		document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="REPEAT_BUTTON_NO_REPEAT"]').click()
-	} catch(e) {
-		try {
-			document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="REPEAT_BUTTON_REPEAT_CONTEXT"]').click()
-		} catch(e) {
-			try {
-				document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="REPEAT_BUTTON_REPEAT_ONE"]').click()
-			} catch(e) {
-				return false;
-			}
-		}
+	switch(isPlayerRepeatedStatus()) {
+		case 0:
+			window.pulsesyncApi.setRepeatMode("context");
+			break;
+		case 1:
+			window.pulsesyncApi.setRepeatMode("one");
+			break;
+		case 2:
+			window.pulsesyncApi.setRepeatMode("none");
+			break;
+		default:
+			return false;
 	}
 	return true;
 }
+function timeInteraction(amount, how) {
+		window.pulsesyncApi.setProgress(window.pulsesyncApi.getProgress().position + [-amount, amount][how]);
+		return true;
+}
 function isPlayerVibeStatus() {
-		if(window.sonataState.queueState.currentEntity.value.entity.entityData.type == "vibeTrack") {
+		if(window.sonataState?.queueState.currentEntity.value?.entity.entityData.type == "vibeTrack") {
 			return 1
 		} else {
 			return 0
 		}
 }
 function isPlayerShuffledStatus() {
-	if(document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="SHUFFLE_BUTTON_ON"]')) {
-		return 1;
-	} else if (document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="SHUFFLE_BUTTON"]')) {
-		return 0;
-	}
+	return +window.pulsesyncApi.isShuffle();
 }
 
 function isPlayerRepeatedStatus() {
-	if(document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="REPEAT_BUTTON_NO_REPEAT"]')) {
-		return 0;
-	} else if (document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="REPEAT_BUTTON_REPEAT_CONTEXT"]')) {
-		return 1;
-	} else if (document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="REPEAT_BUTTON_REPEAT_ONE"]')) {
-		return 2;
+	switch(window.pulsesyncApi.getRepeatMode()) {
+		case "none":
+			return 0;
+		case "context":
+			return 1;
+		case "one":
+			return 2
 	}
 }
-
+function getCurrentTime() {
+	return Math.round(window.pulsesyncApi?.getProgress()?.position || 0);
+}
+function getEndTime() {
+	return Math.round(window.pulsesyncApi?.getProgress()?.duration || 0);
+}
 function getCoverImageSrc() {
-	return (document.querySelector(".PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN img[data-test-id=ENTITY_COVER_IMAGE]").src).replace("https", "http");
+	return (document.querySelector(".PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN img[data-test-id=ENTITY_COVER_IMAGE]")?.src || "").replace("https", "http");
 }
 function getCurrentVolumeLevel() {
 	return Math.round(window.sonataState.playerState.exponentVolume.value*100)/100;
 }
 
 function isFavouriteStatus() {
-	const id = window.sonataState.queueState.currentEntity.value?.entity.entityData.meta.id;
-	if (window.sonataState.queueState.currentEntity.value.entity.likeStore.isTrackLiked(id)) {
-		return 1;
-	}
-	return 0;
+	return window.pulsesyncApi.isTrackLiked();
 	
 }
 function isPlayerPausedStatus() {
-	if(document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="PAUSE_BUTTON"]')) {
-		return 0;
-	} else if (document.querySelector('.PlayerBarDesktopWithBackgroundProgressBar_root__bpmwN .BaseSonataControlsDesktop_sonataButton__GbwFt[data-test-id="PLAY_BUTTON"]')) {
-		return 1;
-	}
+	return + !window.pulsesyncApi.isPlaying();
 }
 
 function handleSocketCommand(message, data, socket) {
 	switch(message) {
 		case "device":
 			console.log('Плагин успешно подключился к доку!');
-			let element = document.getElementById("docksync_status");
-			element.className += " active";
 			break;
+		case "currentTime":
+			socket.send(JSON.stringify({response: getCurrentTime(), request: "currentTime"}));
+		break;
+		case "endTime":
+			socket.send(JSON.stringify({response: getEndTime(), request: "endTime"}));
+		break;
 		case "coverImage":
 			socket.send(JSON.stringify({response: getCoverImageSrc(), request: "coverImage"}));
 		break;
@@ -270,7 +320,6 @@ function handleSocketCommand(message, data, socket) {
 			console.log('dislikeInteraction запрошена устройством;');
 			unfavouriteInteraction();
 		break;
-		
 		case "likeInteraction":
 			console.log('likeInteraction запрошена устройством;');
 			favouriteInteraction();
@@ -299,6 +348,10 @@ function handleSocketCommand(message, data, socket) {
 			console.log('repeatInteraction запрошена устройством;');
 			repeatInteraction();
 			break;
+		case "time":
+			console.log('time запрошена устройством;');
+			timeInteraction(data.message, data.how);
+		break;
 		case "volume":
 			console.log('volume запрошена устройством;');
 			changeVolumeByStep(data.message, data.how);
@@ -326,25 +379,5 @@ const addIcon = setInterval(async () => {
 		clearInterval(addIcon);
 	}
 }, 1000);
-setInterval(async () => {
-	let setting = await getSettings('DockSync');
-	console.log(setting);
 
-if (socket?.readyState === WebSocket.OPEN) return
-socket = new WebSocket(`ws://localhost:${setting.websocket.port.value}`);
-
-socket.addEventListener('open', () => {
-	console.log('Подключено к серверу');
-});
-	socket.addEventListener('error', (error) => {
-	console.error('Ошибка:', error);
-});
-socket.addEventListener('message', (event) => {
-	//console.log(`Получено от сервера: ${event.data}`); // логирование
-	
-	const message = JSON.parse(event.data);
-	
-	handleSocketCommand(message.request, message, socket);
-});
-
-}, 10000);
+connectSocket()
