@@ -5,7 +5,7 @@
     "libraryLogo": "App-logo.png",
     "author": "AnimeLore",
     "description": "Полезный аддон для связывания вашего StreamDock и Яндекс музыки",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "css": "style.css",
     "script": "script.js",
     "type": "script",
